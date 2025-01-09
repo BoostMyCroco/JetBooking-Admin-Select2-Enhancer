@@ -59,25 +59,35 @@ add_action('admin_enqueue_scripts', function () {
 add_action('admin_footer', function () {
     ?>
     <script>
+        const fixDisabledDates = () => {
+            const dateFields = document.querySelector('.jet-abaf-details__booking-dates');
+            if (dateFields && dateFields.classList.contains('jet-abaf-disabled')) {
+                dateFields.classList.remove('jet-abaf-disabled');
+                console.log('Re-enabled the date picker fields.');
+
+                // Simulate a change event on the Booking Item select to trigger JetBooking's internal logic
+                const bookingItemSelect = document.querySelector('.jet-abaf-details__field-apartment_id select');
+                if (bookingItemSelect) {
+                    const event = new Event('change', { bubbles: true });
+                    bookingItemSelect.dispatchEvent(event);
+                    console.log('Triggered change event on Booking Item select.');
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             try {
-                // Function to sort and apply Select2 to the <select>
                 const enhanceSelectWithSelect2 = () => {
                     const select = document.querySelector('.jet-abaf-details__field-apartment_id select');
 
                     if (select && !select.hasAttribute('data-select2-initialized')) {
-                        // Capture current options and separate the placeholder
                         const options = Array.from(select.options);
                         const placeholder = options.find(option => !option.value || option.value.trim() === '');
                         const nonPlaceholderOptions = options.filter(option => option.value && option.value.trim() !== '');
 
-                        // Sort options alphabetically
                         nonPlaceholderOptions.sort((a, b) => a.text.localeCompare(b.text));
 
-                        // Clear the <select>
                         jQuery(select).empty();
-
-                        // Rebuild the <select>
                         if (placeholder) {
                             jQuery(select).append(new Option(placeholder.text || 'Select an option', '', true, true));
                         }
@@ -85,7 +95,6 @@ add_action('admin_footer', function () {
                             jQuery(select).append(new Option(option.text, option.value));
                         });
 
-                        // Initialize Select2 with dropdownParent option
                         if (jQuery(select).data('select2')) {
                             jQuery(select).select2('destroy');
                         }
@@ -93,30 +102,28 @@ add_action('admin_footer', function () {
                             placeholder: placeholder ? placeholder.text : 'Select an option',
                             allowClear: true,
                             width: '100%',
-                            dropdownParent: jQuery('.jet-abaf-popup'), // Ensure dropdown aligns within the popup
+                            dropdownParent: jQuery('.jet-abaf-popup'),
                         });
 
-                        // Add a marker to avoid reinitialization
                         select.setAttribute('data-select2-initialized', 'true');
+                        fixDisabledDates(); // Ensure date pickers are re-enabled
                     }
                 };
 
-                // Configure mutation observer to detect DOM changes
                 const observer = new MutationObserver(mutations => {
                     mutations.forEach(mutation => {
                         if (mutation.addedNodes.length) {
                             const select = document.querySelector('.jet-abaf-details__field-apartment_id select');
                             if (select) {
                                 enhanceSelectWithSelect2();
+                                fixDisabledDates(); // Ensure dates are re-enabled on DOM updates
                             }
                         }
                     });
                 });
 
-                // Observe DOM changes
                 observer.observe(document.body, { childList: true, subtree: true });
 
-                // Apply Select2 initially
                 enhanceSelectWithSelect2();
             } catch (error) {
                 console.error('Error processing the script:', error);
@@ -125,3 +132,4 @@ add_action('admin_footer', function () {
     </script>
     <?php
 });
+
