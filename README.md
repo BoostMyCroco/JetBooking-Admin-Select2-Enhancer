@@ -50,6 +50,7 @@ GNU General Public License v3.0
 ## Code
 
 ```php
+<?php
 add_action('admin_footer', function () {
     ?>
     <script>
